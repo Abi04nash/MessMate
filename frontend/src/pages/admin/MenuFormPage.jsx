@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useMenuDetailQuery, useCreateMenuMutation, useUpdateMenuMutation } from "../../app/api.js";
 import { toast } from "sonner";
@@ -22,7 +22,11 @@ function emptyMeal(category) {
   };
 }
 
-function tomorrowStr() {
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function tomorrowStr() { {
   const d = new Date();
   d.setDate(d.getDate() + 1);
   return d.toISOString().slice(0, 10);
@@ -37,7 +41,7 @@ export default function MenuFormPage() {
   const [createMenu, { isLoading: creating }] = useCreateMenuMutation();
   const [updateMenu, { isLoading: updating }] = useUpdateMenuMutation();
 
-  const [date, setDate] = useState(tomorrowStr());
+  const [date, setDate] = useState(todayStr());
   const [notes, setNotes] = useState("");
   const [published, setPublished] = useState(true);
   const [meals, setMeals] = useState(CATEGORIES.map(emptyMeal));
@@ -113,7 +117,7 @@ export default function MenuFormPage() {
 
   if (isEdit && loadingExisting) return <div className="page"><p>Loading...</p></div>;
 
-  const minDate = isEdit ? undefined : tomorrowStr();
+  const minDate = isEdit ? undefined : todayStr();
 
   return (
     <div className="page">
@@ -123,7 +127,7 @@ export default function MenuFormPage() {
         </Link>
         <h1>{isEdit ? "Edit Menu" : "Create Menu"}</h1>
         <p className="muted">
-          {isEdit ? "Update items, times, or publish status" : "Menus must be for future dates. Students see them on their dashboard immediately."}
+          {isEdit ? "Update items, times, or publish status" : "Menus can be created for today or any future date. Students see them immediately."}
         </p>
       </header>
 
@@ -137,7 +141,7 @@ export default function MenuFormPage() {
         <div className="card">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <label>
-              <span>Date {!isEdit && "(must be tomorrow or later)"}</span>
+              <span>Date {!isEdit && "(today or later)"}</span>
               <input
                 type="date"
                 value={date}
