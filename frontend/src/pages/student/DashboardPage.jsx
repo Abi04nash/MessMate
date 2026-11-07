@@ -51,11 +51,6 @@ export default function DashboardPage() {
             <strong>{ctx.attendanceThisMonth ?? 0}</strong>
           </div>
           <div className="stat-card">
-            <span>Current bill</span>
-            <strong>Rs. {ctx.currentBill?.total ?? 0}</strong>
-            <small>{ctx.currentBill?.status || "Not generated yet"}</small>
-          </div>
-          <div className="stat-card">
             <span>Notifications</span>
             <strong>{ctx.unreadNotifications ?? 0}</strong>
           </div>
