@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+const API_URL = import.meta.env.VITE_API_URL || "https://messmate-18cs.onrender.com/api/v1";
 
 function getCsrf() {
   const m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);

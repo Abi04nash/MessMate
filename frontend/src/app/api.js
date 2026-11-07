@@ -6,7 +6,7 @@ function getCsrfToken() {
 }
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
+  baseUrl: import.meta.env.VITE_API_URL || "https://messmate-18cs.onrender.com/api/v1",
   credentials: "include",
   prepareHeaders: (headers) => {
     const csrf = getCsrfToken();
