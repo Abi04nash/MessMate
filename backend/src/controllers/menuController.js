@@ -1,4 +1,4 @@
-import { sendSuccess } from "../utils/apiResponse.js";
+﻿import { sendSuccess } from "../utils/apiResponse.js";
 import * as menuService from "../services/menuService.js";
 
 export async function getTodayMenu(req, res, next) {
@@ -80,5 +80,15 @@ export async function deleteMenu(req, res, next) {
   try {
     await menuService.deleteMenu(req.params.id);
     sendSuccess(res, { message: "Menu deleted" });
+  } catch (err) { next(err); }
+}
+export async function cleanupDuplicates(req, res, next) {
+  try {
+    const menuResult = await menuService.cleanupDuplicateMenus();
+    const sessionResult = await menuService.dedupeSessionsInDB();
+    sendSuccess(res, {
+      message: `Cleaned ${menuResult.removed.length} duplicate menus, ${sessionResult.removedCount} duplicate sessions`,
+      data: { menuResult, sessionResult }
+    });
   } catch (err) { next(err); }
 }

@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { protect, authorize, optionalAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { createMenuSchema } from "../validators/menuValidators.js";
@@ -11,6 +11,7 @@ router.get("/upcoming", optionalAuth, ctrl.getUpcoming);
 router.get("/date/:date", ctrl.getMenuByDate);
 
 router.get("/", protect, authorize("mess_admin", "warden", "staff"), ctrl.listMenus);
+router.post("/_cleanup-duplicates", protect, authorize("warden"), ctrl.cleanupDuplicates);
 router.get("/:id", protect, authorize("mess_admin", "warden", "staff"), ctrl.getDetail);
 router.post("/", protect, authorize("mess_admin", "warden"), validate(createMenuSchema), ctrl.createMenu);
 router.put("/:id", protect, authorize("mess_admin", "warden"), ctrl.updateMenu);
