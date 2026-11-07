@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useMenuDetailQuery, useCreateMenuMutation, useUpdateMenuMutation } from "../../app/api.js";
 import { toast } from "sonner";
 import { Plus, Trash2, ArrowLeft, AlertCircle } from "lucide-react";
@@ -26,13 +27,8 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function tomorrowStr() { {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
-}
-
 export default function MenuFormPage() {
+  const user = useSelector((s) => s.auth.user);
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
@@ -48,6 +44,10 @@ export default function MenuFormPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  if (!["mess_admin", "warden"].includes(user?.role)) {
+    return <Navigate to="/admin/menus" replace />;
+  }
+
   useEffect(() => {
     if (existing?.data?.menu) {
       const m = existing.data.menu;
@@ -58,7 +58,9 @@ export default function MenuFormPage() {
         category: meal.category,
         startTime: meal.startTime,
         endTime: meal.endTime,
-        items: (meal.items || []).length ? meal.items.map((it) => ({ name: it.name, dietary: it.dietary || "veg" })) : [{ name: "" }],
+        items: (meal.items || []).length
+          ? meal.items.map((it) => ({ name: it.name, dietary: it.dietary || "veg" }))
+          : [{ name: "" }],
         serving: true
       })));
     }
@@ -127,7 +129,9 @@ export default function MenuFormPage() {
         </Link>
         <h1>{isEdit ? "Edit Menu" : "Create Menu"}</h1>
         <p className="muted">
-          {isEdit ? "Update items, times, or publish status" : "Menus can be created for today or any future date. Students see them immediately."}
+          {isEdit
+            ? "Update items, times, or publish status"
+            : "Menus can be created for today or any future date. Students see them immediately."}
         </p>
       </header>
 
