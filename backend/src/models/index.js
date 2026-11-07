@@ -1,4 +1,4 @@
-// Central model registry - registers every Mongoose model at startup.
+// Central model registry - importing this file registers all Mongoose models
 export { User } from "./User.js";
 export { Hostel } from "./Hostel.js";
 export { RefreshSession } from "./RefreshSession.js";

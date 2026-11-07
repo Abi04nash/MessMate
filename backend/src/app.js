@@ -1,9 +1,10 @@
-import express from "express";
+﻿import express from "express";
 import pinoHttp from "pino-http";
 import cors from "cors";
 import { env, isTest } from "./config/env.js";
 import { applySecurity, apiLimiter, originCheck, corsOptions } from "./middleware/security.js";
 import apiRouter from "./routes/index.js";
+import "./models/index.js";
 
 const app = express();
 app.disable("x-powered-by");
