@@ -12,14 +12,14 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// server.js is at backend/src/server.js â†’ project root is two levels up
+// server.js is at backend/src/server.js ' project root is two levels up
 const projectRoot = path.resolve(__dirname, "../..");
 const frontendDist = path.join(projectRoot, "frontend", "dist");
 
 // ---------- Serve frontend ----------
 app.use(express.static(frontendDist));
 
-// SPA fallback â€” every non-API GET serves index.html
+// SPA fallback - every non-API GET serves index.html
 app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api")) return next();
   res.sendFile(path.join(frontendDist, "index.html"));

@@ -11,8 +11,8 @@ router.get("/running", protect, authorize("student"), ctrl.running);
 router.get("/debug", protect, authorize("student"), ctrl.debug);
 router.post("/reset-payments", protect, authorize("student"), ctrl.reset);
 router.get("/:id", protect, ctrl.detail);
-router.get("/", protect, authorize("mess_admin", "warden"), ctrl.all);
-router.post("/generate", protect, authorize("mess_admin", "warden"), validate(generateBillSchema), ctrl.generate);
-router.post("/adjustments", protect, authorize("mess_admin", "warden"), validate(adjustmentSchema), ctrl.adjust);
+router.get("/", protect, authorize("mess_committee", "admin"), ctrl.all);
+router.post("/generate", protect, authorize("mess_committee", "admin"), validate(generateBillSchema), ctrl.generate);
+router.post("/adjustments", protect, authorize("mess_committee", "admin"), validate(adjustmentSchema), ctrl.adjust);
 
 export default router;

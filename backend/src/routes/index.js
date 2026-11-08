@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { sendSuccess } from "../utils/apiResponse.js";
 import authRoutes from "./authRoutes.js";
 import menuRoutes from "./menuRoutes.js";
@@ -18,6 +18,7 @@ import inventoryRequestRoutes from "./inventoryRequestRoutes.js";
 import wastageRoutes from "./wastageRoutes.js";
 import pollRoutes from "./pollRoutes.js";
 import settingRoutes from "./settingRoutes.js";
+import groundFloorRoutes from "./groundFloorRoutes.js";
 
 const router = Router();
 
@@ -44,5 +45,6 @@ router.use("/inventory-requests", inventoryRequestRoutes);
 router.use("/wastage", wastageRoutes);
 router.use("/polls", pollRoutes);
 router.use("/settings", settingRoutes);
+router.use("/ground-floor", groundFloorRoutes);
 
 export default router;

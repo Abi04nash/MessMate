@@ -1172,3 +1172,21 @@ h1, h2, h3, h4 { color: var(--navy-900); letter-spacing: -0.02em; }
   .payment-qr-canvas { padding: 10px !important; }
   .payment-qr-canvas > svg { width: 130px !important; height: 130px !important; }
 }
+/* ============ Ground Floor Pass - Print styles ============ */
+@media print {
+  @page { size: A4; margin: 14mm; }
+  body { background: white !important; }
+  body * { visibility: hidden; }
+  .ground-floor-pass-wrapper, .ground-floor-pass-wrapper * { visibility: visible; }
+  .ground-floor-pass-wrapper {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    padding: 0;
+  }
+  .no-print, .app-sidebar, .app-mobile-bar, .app-overlay { display: none !important; }
+  .ground-floor-pass { box-shadow: none !important; }
+  .ground-floor-pass > div { border-radius: 0 !important; }
+}
+/* Role dot for mess_committee */
+.role-mess_committee { background: #f5b942; }

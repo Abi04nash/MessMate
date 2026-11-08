@@ -15,7 +15,7 @@ const VISUALS = {
 export default function MenuHistoryPage() {
   const user = useSelector((s) => s.auth.user);
   const isStaff = user?.role === "staff";
-  const canEdit = ["mess_admin", "warden"].includes(user?.role);
+  const canEdit = ["mess_committee", "admin"].includes(user?.role);
 
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("all");

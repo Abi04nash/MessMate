@@ -1,4 +1,4 @@
-import { Bill } from "../models/Bill.js";
+﻿import { Bill } from "../models/Bill.js";
 import { Payment } from "../models/Payment.js";
 import { MealRegistration } from "../models/MealRegistration.js";
 import { SystemSetting } from "../models/SystemSetting.js";
@@ -37,7 +37,8 @@ async function aggregateUserMeals({ userId, from, to }) {
   const regs = await MealRegistration.find({
     user: userId,
     date: { $gte: from, $lt: to },
-    status: { $in: BILLABLE_STATUSES }
+    status: { $in: BILLABLE_STATUSES },
+    billingExempt: { $ne: true }
   }).populate("session", "category").lean();
 
   const counts = { breakfast: 0, lunch: 0, snacks: 0, dinner: 0 };

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useRunningBillQuery, usePayDirectMutation, useMyPaymentsQuery } from "../../app/api.js";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";

@@ -19,6 +19,6 @@ router.get("/my", protect, authorize("student"), ctrl.my);
 router.get("/:id", protect, ctrl.detail);
 
 // All payments (admin/warden)
-router.get("/", protect, authorize("mess_admin", "warden"), ctrl.all);
+router.get("/", protect, authorize("mess_committee", "admin"), ctrl.all);
 
 export default router;

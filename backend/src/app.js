@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import pinoHttp from "pino-http";
 import cors from "cors";
 import { env, isTest } from "./config/env.js";

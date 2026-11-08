@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+﻿import mongoose from "mongoose";
 import { REGISTRATION_STATUS } from "../constants/statuses.js";
 
 const mealRegistrationSchema = new mongoose.Schema(
@@ -12,6 +12,7 @@ const mealRegistrationSchema = new mongoose.Schema(
       default: REGISTRATION_STATUS.REGISTERED,
       index: true
     },
+    billingExempt: { type: Boolean, default: false },
     cancelledAt: { type: Date },
     cancellationReason: { type: String, default: "" }
   },

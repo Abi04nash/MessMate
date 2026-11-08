@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useUpcomingMenusQuery, useRegisterMealMutation, useCancelRegistrationMutation, useMyRegistrationsQuery } from "../../app/api.js";
 import { toast } from "sonner";
-import { Clock, Leaf, Flame, ChevronLeft, ChevronRight, Egg, Utensils, Cookie, Moon, X, CheckCircle2 } from "lucide-react";
+import { Clock, Leaf, Flame, ChevronLeft, ChevronRight, Egg, Utensils, Cookie, Moon, CheckCircle2, Building2 } from "lucide-react";
 
 const VISUALS = {
   breakfast: { bg: "linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%)", color: "#78350f", Icon: Egg },
@@ -12,8 +11,11 @@ const VISUALS = {
   dinner: { bg: "linear-gradient(135deg, #ede9fe 0%, #c4b5fd 100%)", color: "#4c1d95", Icon: Moon }
 };
 
+const MEAL_LABELS = { breakfast: "Breakfast", lunch: "Lunch", snacks: "Snacks", dinner: "Dinner" };
+
 export default function MenuPage() {
   const user = useSelector((s) => s.auth.user);
+  const isGroundFloor = user?.messSystem === "ground_floor";
   const [page, setPage] = useState(1);
   const { data, isLoading, refetch } = useUpcomingMenusQuery({ page, limit: 3, days: 30 });
   const { data: regData, refetch: refetchRegs } = useMyRegistrationsQuery();
@@ -21,11 +23,23 @@ export default function MenuPage() {
   const [cancel] = useCancelRegistrationMutation();
   const [busy, setBusy] = useState(null);
 
-  if (user?.role !== "student") return <Navigate to="/dashboard" replace />;
-
   const menus = data?.data?.menus || [];
   const meta = data?.meta || { page: 1, pages: 0, total: 0 };
   const allRegs = regData?.data?.registrations || [];
+
+  // Extract meals included in GF plan from any myRegistration that has isGroundFloor
+  const gfMeals = (() => {
+    if (!isGroundFloor) return [];
+    const meals = new Set();
+    for (const menu of menus) {
+      for (const s of menu.sessions || []) {
+        if (s.myRegistration?.isGroundFloor && s.myRegistration?.status === "registered") {
+          meals.add(s.category);
+        }
+      }
+    }
+    return [...meals];
+  })();
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const upcomingRegistered = allRegs.filter((r) => {
@@ -38,7 +52,7 @@ export default function MenuPage() {
     setBusy(sessionId);
     try {
       await register({ sessionId }).unwrap();
-      toast.success("Registered. Amount added to your bill.");
+      toast.success("Registered. Amount added to bill.");
       await Promise.all([refetch(), refetchRegs()]);
     } catch (err) {
       toast.error(err?.data?.message || "Registration failed");
@@ -46,11 +60,11 @@ export default function MenuPage() {
   };
 
   const handleCancel = async (registrationId) => {
-    if (!confirm("Cancel this meal registration? Amount will be removed from your bill.")) return;
+    if (!confirm("Cancel this meal registration?")) return;
     setBusy(registrationId);
     try {
       await cancel(registrationId).unwrap();
-      toast.success("Cancelled. Amount removed from bill.");
+      toast.success("Cancelled");
       await Promise.all([refetch(), refetchRegs()]);
     } catch (err) {
       toast.error(err?.data?.message || "Cancellation failed");
@@ -66,11 +80,27 @@ export default function MenuPage() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Menu & Registration</h1>
-        <p className="muted">Register before cutoff. Cancel any time before the cancellation window.</p>
+        <h1>{isGroundFloor ? "Menu - Semester Plan" : "Menu & Registration"}</h1>
+        <p className="muted">
+          {isGroundFloor
+            ? "Your meals are pre-registered as part of your semester plan. Just show up to eat."
+            : "Register before cutoff. Cancel any time before the cancellation window."}
+        </p>
       </header>
 
-      {upcomingRegistered.length > 0 && (
+      {isGroundFloor && gfMeals.length > 0 && (
+        <div className="card" style={{ marginBottom: 20, borderLeft: "3px solid #a06800", background: "rgba(245,185,66,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <Building2 size={18} color="#a06800" />
+            <strong style={{ fontSize: 14, color: "#a06800" }}>Ground Floor Semester Plan</strong>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>
+            You are pre-registered for: <strong>{gfMeals.map((m) => MEAL_LABELS[m] || m).join(", ")}</strong> - every day of the semester.
+          </p>
+        </div>
+      )}
+
+      {!isGroundFloor && upcomingRegistered.length > 0 && (
         <div className="card" style={{ marginBottom: 24, borderLeft: "3px solid #0e7c66", background: "rgba(14,124,102,0.03)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <CheckCircle2 size={18} color="#0e7c66" />
@@ -112,13 +142,15 @@ export default function MenuPage() {
                 {isToday(menu.date) && <span className="pill pill-green">Today</span>}
                 {isTomorrow(menu.date) && <span className="pill pill-amber">Tomorrow</span>}
               </div>
-              {menu.notes && <p className="muted" style={{ marginTop: 0, marginBottom: 12, fontStyle: "italic" }}>{menu.notes}</p>}
 
               <div className="meal-grid">
                 {menu.sessions.map((s) => {
+                  const isGfReg = s.myRegistration?.isGroundFloor === true && s.myRegistration?.status === "registered";
                   const isReg = s.myRegistration?.status === "registered";
                   const isAttended = s.myRegistration?.status === "attended";
+                  const isEnrolledMeal = isGroundFloor && (isGfReg || isAttended);
                   const visual = VISUALS[s.category] || VISUALS.lunch;
+
                   return (
                     <div key={s._id} className="meal-card" style={{ padding: 0, overflow: "hidden" }}>
                       <div className="meal-card-visual" style={{ background: visual.bg }}>
@@ -127,10 +159,14 @@ export default function MenuPage() {
                       <div style={{ padding: 16 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
                           <h3 style={{ textTransform: "capitalize", margin: 0 }}>{s.category}</h3>
-                          <span style={{ fontSize: 15, fontWeight: 800, color: "#0b1f3a" }}>Rs. {s.unitPrice}</span>
+                          {!isGroundFloor && (
+                            <span style={{ fontSize: 15, fontWeight: 800, color: "#0b1f3a" }}>Rs. {s.unitPrice}</span>
+                          )}
+                          {isGroundFloor && (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: "#a06800" }}>IN PLAN</span>
+                          )}
                         </div>
                         <p className="muted meal-time"><Clock size={13} /> {s.startTime} - {s.endTime}</p>
-
                         {s.items && s.items.length > 0 && (
                           <ul className="meal-items">
                             {s.items.map((item, i) => (
@@ -142,37 +178,41 @@ export default function MenuPage() {
                             ))}
                           </ul>
                         )}
-
                         <div className="meal-status-row">
-                          {isAttended ? (
-                            <span className="pill pill-green">Attended</span>
-                          ) : isReg ? (
-                            <span className="pill pill-green">Registered</span>
-                          ) : s.registrationOpen ? (
-                            <span className="pill pill-muted">Open</span>
-                          ) : (
-                            <span className="pill pill-amber">Closed</span>
-                          )}
+                          {isAttended ? <span className="pill pill-green">Attended</span>
+                            : isGfReg ? <span className="pill pill-green">Registered (Semester Plan)</span>
+                            : isReg ? <span className="pill pill-green">Registered</span>
+                            : s.registrationOpen ? <span className="pill pill-muted">Open</span>
+                            : <span className="pill pill-amber">Closed</span>}
                         </div>
 
-                        {isReg && s.cancellationOpen && (
+                        {/* 1st floor actions */}
+                        {!isGroundFloor && isReg && !isAttended && s.cancellationOpen && (
                           <button className="btn" style={{ background: "#dc2626" }} disabled={busy === s.myRegistration._id} onClick={() => handleCancel(s.myRegistration._id)}>
                             {busy === s.myRegistration._id ? "Cancelling..." : "Cancel Registration"}
                           </button>
                         )}
-
-                        {isReg && !s.cancellationOpen && (
-                          <p className="meal-cutoff-note">Cancellation window has closed.</p>
+                        {!isGroundFloor && !isReg && !isAttended && s.registrationOpen && (
+                          <button className="btn" disabled={busy === s._id} onClick={() => handleRegister(s._id)}>
+                            {busy === s._id ? "Registering..." : `Register (Rs. ${s.unitPrice})`}
+                          </button>
+                        )}
+                        {!isGroundFloor && !isReg && !isAttended && !s.registrationOpen && (
+                          <p className="meal-cutoff-note">Closed</p>
                         )}
 
-                        {!isReg && !isAttended && (
-                          s.registrationOpen ? (
-                            <button className="btn" disabled={busy === s._id} onClick={() => handleRegister(s._id)}>
-                              {busy === s._id ? "Registering..." : "Register (Rs. " + s.unitPrice + ")"}
-                            </button>
-                          ) : (
-                            <p className="meal-cutoff-note">Closed at {s.registrationCutoff ? new Date(s.registrationCutoff).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "cutoff"}</p>
-                          )
+                        {/* Ground floor: not in plan */}
+                        {isGroundFloor && !isEnrolledMeal && (
+                          <p className="meal-cutoff-note" style={{ color: "#a06800" }}>
+                            Not in your semester plan
+                          </p>
+                        )}
+
+                        {/* Ground floor: enrolled */}
+                        {isGroundFloor && isEnrolledMeal && !isAttended && (
+                          <p style={{ margin: "8px 0 0", fontSize: 12, color: "#0e7c66", fontStyle: "italic" }}>
+                            Prepaid - no action needed
+                          </p>
                         )}
                       </div>
                     </div>

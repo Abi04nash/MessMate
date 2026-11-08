@@ -2,6 +2,8 @@ import { MealMenu } from "../models/MealMenu.js";
 import { MealSession } from "../models/MealSession.js";
 import { MealRegistration } from "../models/MealRegistration.js";
 import { SystemSetting } from "../models/SystemSetting.js";
+import { User } from "../models/User.js";
+import { SemesterEnrollment } from "../models/SemesterEnrollment.js";
 import { ApiError } from "../utils/ApiError.js";
 import { MEAL_SESSION_STATUS } from "../constants/statuses.js";
 
@@ -30,7 +32,31 @@ async function getPricing() {
   return s && s.value ? s.value : DEFAULT_PRICES;
 }
 
-// Dedupe sessions by category - keeps first, most recent
+async function getGroundFloorEnrollment(userId) {
+  if (!userId) return null;
+  const user = await User.findById(userId).select("messSystem").lean();
+  if (!user || user.messSystem !== "ground_floor") return null;
+  return SemesterEnrollment.findOne({ user: userId, status: "active" }).lean();
+}
+
+function injectGfStatus({ session, menuDate, gfEnrollment, realReg }) {
+  if (realReg) return realReg;
+  if (!gfEnrollment) return null;
+  if (!gfEnrollment.meals.includes(session.category)) return null;
+
+  const day = new Date(menuDate);
+  const start = new Date(gfEnrollment.semesterStart);
+  const end = new Date(gfEnrollment.semesterEnd);
+
+  if (day < start || day > end) return null;
+
+  return {
+    _id: "gf:" + String(gfEnrollment._id),
+    status: "registered",
+    isGroundFloor: true
+  };
+}
+
 function dedupeSessionsByCategory(sessions) {
   const seen = new Set();
   const out = [];
@@ -42,7 +68,6 @@ function dedupeSessionsByCategory(sessions) {
   return out.sort((a, b) => (CATEGORY_ORDER[a.category] || 99) - (CATEGORY_ORDER[b.category] || 99));
 }
 
-// Dedupe menus by calendar day - keeps first
 function dedupeMenusByDay(menus) {
   const seen = new Set();
   const out = [];
@@ -59,10 +84,8 @@ async function findMenuForDate(dateInput) {
   const target = startOfDayUTC(dateInput);
   const start = new Date(target.getTime() - 12 * 60 * 60 * 1000);
   const end = new Date(target.getTime() + 36 * 60 * 60 * 1000);
-
   const menus = await MealMenu.find({ date: { $gte: start, $lt: end } }).sort({ createdAt: -1 }).lean();
   if (menus.length === 0) return null;
-
   let best = menus[0];
   let bestDist = Math.abs(new Date(best.date).getTime() - target.getTime());
   for (const m of menus) {
@@ -70,12 +93,6 @@ async function findMenuForDate(dateInput) {
     if (dist < bestDist) { best = m; bestDist = dist; }
   }
   return best;
-}
-
-// IMPORTANT: only returns sessions of the given menu. No dupes possible.
-async function findSessionsForMenu(menuId) {
-  if (!menuId) return [];
-  return MealSession.find({ menu: menuId }).sort({ startTime: 1 }).lean();
 }
 
 async function computeCutoffs(menuDate, meal, regCut, cancelCut) {
@@ -124,16 +141,9 @@ async function syncSessionsForMenu(menu) {
 export async function createMenu({ date, meals, notes, published, createdBy }) {
   const day = startOfDayUTC(date);
   const todayUTC = startOfDayUTC(new Date());
-
-  if (day < todayUTC) {
-    throw new ApiError(400, "Menus cannot be created for past dates.");
-  }
-
+  if (day < todayUTC) throw new ApiError(400, "Menus cannot be created for past dates.");
   const existing = await findMenuForDate(day);
-  if (existing) {
-    throw new ApiError(409, "A menu already exists for " + day.toDateString() + ". Edit it instead.");
-  }
-
+  if (existing) throw new ApiError(409, "A menu already exists for " + day.toDateString() + ". Edit it instead.");
   const menu = await MealMenu.create({
     date: day, meals, notes,
     published: !!published, publishedAt: published ? new Date() : undefined, createdBy
@@ -207,12 +217,10 @@ export async function listMenus({ from, to, published, page = 1, limit = 50 } = 
   }
   if (published !== undefined) query.published = published;
   const skip = (Number(page) - 1) * Number(limit);
-
   const allMenus = await MealMenu.find(query).sort({ date: -1 }).lean();
   const deduped = dedupeMenusByDay(allMenus);
   const total = deduped.length;
   const menus = deduped.slice(skip, skip + Number(limit));
-
   return { menus, total, page: Number(page), pages: Math.ceil(total / Number(limit)) };
 }
 
@@ -234,6 +242,7 @@ export async function getUpcomingMenus({ userId, days = 30, page = 1, limit = 3 
   const menuIds = paginatedMenus.map((m) => m._id);
   const allSessions = await MealSession.find({ menu: { $in: menuIds } }).sort({ startTime: 1 }).lean();
   const pricing = await getPricing();
+  const gfEnrollment = await getGroundFloorEnrollment(userId);
 
   let regMap = new Map();
   if (userId) {
@@ -246,17 +255,29 @@ export async function getUpcomingMenus({ userId, days = 30, page = 1, limit = 3 
 
   const now = new Date();
   const sessionsByMenu = {};
+  const menuDateMap = {};
+  for (const m of paginatedMenus) {
+    menuDateMap[String(m._id)] = m.date;
+  }
+
   for (const s of allSessions) {
     const key = String(s.menu);
     if (!sessionsByMenu[key]) sessionsByMenu[key] = [];
     const regCut = s.registrationCutoff ? new Date(s.registrationCutoff) : null;
     const cancelCut = s.cancellationCutoff ? new Date(s.cancellationCutoff) : null;
+    const realReg = regMap.get(String(s._id)) || null;
+    const myRegistration = injectGfStatus({
+      session: s,
+      menuDate: menuDateMap[key],
+      gfEnrollment,
+      realReg
+    });
     sessionsByMenu[key].push({
       ...s,
       unitPrice: Number(pricing[s.category]) || 0,
       registrationOpen: !regCut || now < regCut,
       cancellationOpen: !cancelCut || now < cancelCut,
-      myRegistration: regMap.get(String(s._id)) || null
+      myRegistration
     });
   }
 
@@ -277,7 +298,7 @@ export async function getUpcomingMenus({ userId, days = 30, page = 1, limit = 3 
 export async function getTodaySessionsWithStatus(userId) {
   const today = startOfDayUTC(new Date());
   const menu = await findMenuForDate(today);
-  const sessions = menu ? await findSessionsForMenu(menu._id) : [];
+  const sessions = menu ? await MealSession.find({ menu: menu._id }).sort({ startTime: 1 }).lean() : [];
 
   if (sessions.length === 0) return [];
 
@@ -290,6 +311,9 @@ export async function getTodaySessionsWithStatus(userId) {
     }
   }
 
+  const pricing = await getPricing();
+  const gfEnrollment = await getGroundFloorEnrollment(userId);
+
   let regMap = new Map();
   if (userId) {
     const regs = await MealRegistration.find({
@@ -299,11 +323,17 @@ export async function getTodaySessionsWithStatus(userId) {
     regMap = new Map(regs.map((r) => [String(r.session), r]));
   }
 
-  const pricing = await getPricing();
   const now = new Date();
   const decorated = sessions.map((s) => {
     const regCut = s.registrationCutoff ? new Date(s.registrationCutoff) : null;
     const cancelCut = s.cancellationCutoff ? new Date(s.cancellationCutoff) : null;
+    const realReg = regMap.get(String(s._id)) || null;
+    const myRegistration = injectGfStatus({
+      session: s,
+      menuDate: menu.date,
+      gfEnrollment,
+      realReg
+    });
     return {
       ...s,
       unitPrice: Number(pricing[s.category]) || 0,
@@ -311,14 +341,13 @@ export async function getTodaySessionsWithStatus(userId) {
       special: specialMap[s.category] || false,
       registrationOpen: !regCut || now < regCut,
       cancellationOpen: !cancelCut || now < cancelCut,
-      myRegistration: regMap.get(String(s._id)) || null
+      myRegistration
     };
   });
 
   return dedupeSessionsByCategory(decorated);
 }
 
-// ============ CLEANUP: remove duplicate menus ============
 export async function cleanupDuplicateMenus() {
   const allMenus = await MealMenu.find().sort({ createdAt: -1 }).lean();
   const byDay = {};
@@ -327,13 +356,11 @@ export async function cleanupDuplicateMenus() {
     if (!byDay[day]) byDay[day] = [];
     byDay[day].push(m);
   }
-
   const removed = [];
   for (const [day, dayMenus] of Object.entries(byDay)) {
     if (dayMenus.length <= 1) continue;
     const keep = dayMenus[0];
     const toRemove = dayMenus.slice(1);
-
     for (const m of toRemove) {
       const sessions = await MealSession.find({ menu: m._id }).select("_id");
       const sessionIds = sessions.map((s) => s._id);
@@ -348,7 +375,6 @@ export async function cleanupDuplicateMenus() {
       removed.push({ day, deletedId: String(m._id), keptId: String(keep._id) });
     }
   }
-
   return { totalDays: Object.keys(byDay).length, removed };
 }
 
@@ -360,7 +386,6 @@ export async function dedupeSessionsInDB() {
     if (!byMenuCategory[key]) byMenuCategory[key] = [];
     byMenuCategory[key].push(s);
   }
-
   let removedCount = 0;
   for (const [, sessions] of Object.entries(byMenuCategory)) {
     if (sessions.length <= 1) continue;

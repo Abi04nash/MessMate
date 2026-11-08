@@ -1,6 +1,7 @@
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/User.js";
 import { verifyAccessToken } from "../utils/tokens.js";
+import { normalizeRole } from "../constants/roles.js";
 
 export async function protect(req, res, next) {
   try {
@@ -18,6 +19,8 @@ export async function protect(req, res, next) {
     if (!user) throw new ApiError(401, "Account not found");
     if (user.status !== "active") throw new ApiError(403, "Account is " + user.status);
 
+    // Normalize legacy roles (warden -> admin) so downstream code only sees new names
+    user.role = normalizeRole(user.role);
     req.user = user;
     next();
   } catch (err) {
@@ -35,9 +38,6 @@ export function authorize(...allowedRoles) {
   };
 }
 
-// CRITICAL: If a token is present but expired/invalid, return 401 (not silent
-// anonymous). This triggers auto-refresh on the client so the user's session
-// self-heals instead of silently showing stale data with no registrations.
 export function optionalAuth(req, res, next) {
   const token = req.cookies?.access_token;
   if (!token) return next();
@@ -45,7 +45,7 @@ export function optionalAuth(req, res, next) {
   try {
     const payload = verifyAccessToken(token);
     req.userId = payload.sub;
-    req.userRole = payload.role;
+    req.userRole = normalizeRole(payload.role);
     next();
   } catch {
     return next(new ApiError(401, "Session expired"));

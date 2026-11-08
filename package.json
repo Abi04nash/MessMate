@@ -8,7 +8,8 @@
     "dev": "node --watch backend/src/server.js",
     "build": "npm install --prefix frontend && npm run build --prefix frontend",
     "start": "node backend/src/server.js",
-    "seed": "node backend/scripts/seed.js"
+    "seed": "node backend/scripts/seed.js",
+    "migrate:roles": "node backend/scripts/migrateRoles.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -44,7 +44,7 @@ export default function MenuFormPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  if (!["mess_admin", "warden"].includes(user?.role)) {
+  if (!["mess_committee", "admin"].includes(user?.role)) {
     return <Navigate to="/admin/menus" replace />;
   }
 

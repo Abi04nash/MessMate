@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useCreateAnnouncementMutation } from "../../app/api.js";
 import { toast } from "sonner";
 
@@ -45,7 +45,7 @@ export default function MenuCreatePage() {
         ...m,
         items: m.items.filter((it) => it.name.trim()).map((it) => ({ name: it.name.trim(), dietary: "veg", allergens: [], special: false }))
       }));
-      const res = await fetch((import.meta.env.VITE_API_URL || "https://messmate-18cs.onrender.com/api/v1") + "/menus", {
+      const res = await fetch((import.meta.env.VITE_API_URL || "/api/v1") + "/menus", {
         method: "POST",
         credentials: "include",
         headers: {

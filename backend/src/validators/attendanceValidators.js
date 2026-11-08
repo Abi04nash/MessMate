@@ -9,5 +9,6 @@ export const verifyQrSchema = z.object({
 });
 
 export const manualCheckInSchema = z.object({
-  registrationId: z.string().min(1, "registrationId required")
+  registrationId: z.string().min(1, "registrationId required"),
+  sessionId: z.string().optional()
 });

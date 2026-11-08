@@ -27,7 +27,7 @@ export default function UsersPage() {
     { value: "active", label: "Active" },
     { value: "suspended", label: "Suspended" },
     { value: "student", label: "Students" },
-    { value: "mess_admin", label: "Admins" },
+    { value: "mess_committee", label: "Admins" },
     { value: "staff", label: "Staff" }
   ];
 
@@ -64,7 +64,7 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {users.map((u) => {
-                const isWarden = u.role === "warden";
+                const isWarden = u.role === "admin";
                 return (
                   <tr key={u._id}>
                     <td>
@@ -72,7 +72,7 @@ export default function UsersPage() {
                       {u.studentId && <div style={{ fontSize: 11, color: "#64748b" }}>{u.studentId}</div>}
                     </td>
                     <td>{u.email}</td>
-                    <td><span className="pill pill-muted">{u.role.replace("_", " ")}</span></td>
+                    <td><span className="pill pill-muted">{u.role.replace(/_/g, " ").replace("mess committee", "mess secretary")}</span></td>
                     <td>
                       <span className={`pill ${u.status === "active" ? "pill-green" : u.status === "pending" ? "pill-amber" : u.status === "suspended" ? "pill-red" : "pill-muted"}`}>
                         {u.status}

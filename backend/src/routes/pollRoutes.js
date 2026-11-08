@@ -5,5 +5,5 @@ const router = Router();
 router.get("/active", protect, ctrl.active);
 router.post("/:id/vote", protect, authorize("student"), ctrl.vote);
 router.get("/:id/results", protect, ctrl.results);
-router.post("/", protect, authorize("mess_admin", "warden"), ctrl.create);
+router.post("/", protect, authorize("mess_committee", "admin"), ctrl.create);
 export default router;

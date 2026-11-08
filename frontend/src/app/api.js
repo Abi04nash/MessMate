@@ -1,4 +1,4 @@
-﻿import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 function getCsrfToken() {
   const m = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/);
@@ -6,7 +6,7 @@ function getCsrfToken() {
 }
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL || "https://messmate-18cs.onrender.com/api/v1",
+  baseUrl: import.meta.env.VITE_API_URL || "/api/v1",
   credentials: "include",
   prepareHeaders: (headers) => {
     const csrf = getCsrfToken();
@@ -36,7 +36,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Auth","Menu","MenuList","Registration","Attendance","Bill","Payment","Complaint","Leave","Refund","User","Announcement","Feedback","Inventory","InventoryRequest","Wastage"],
+  tagTypes: ["Auth","Menu","MenuList","Registration","Attendance","Bill","Payment","Complaint","Leave","Refund","User","Announcement","Feedback","Inventory","InventoryRequest","Wastage","Setting"],
   endpoints: (builder) => ({
     me: builder.query({ query: () => "/auth/me", providesTags: ["Auth"] }),
     login: builder.mutation({ query: (body) => ({ url: "/auth/login", method: "POST", body }), invalidatesTags: ["Auth"] }),
@@ -127,6 +127,11 @@ export const api = createApi({
     myWastage: builder.query({ query: () => "/wastage/my", providesTags: ["Wastage"] }),
     createWastage: builder.mutation({ query: (body) => ({ url: "/wastage", method: "POST", body }), invalidatesTags: ["Wastage"] }),
     wastageStats: builder.query({ query: () => "/wastage/stats", providesTags: ["Wastage"] }),
+    groundFloorInfo: builder.query({ query: () => "/ground-floor/info", providesTags: ["Auth","Bill"] }),
+    groundFloorEnroll: builder.mutation({ query: (body) => ({ url: "/ground-floor/enroll", method: "POST", body }), invalidatesTags: ["Auth","Bill"] }),
+    updateMyProfile: builder.mutation({ query: (body) => ({ url: "/users/me", method: "PATCH", body }), invalidatesTags: ["Auth"] }),
+    listSettings: builder.query({ query: () => "/settings", providesTags: ["Setting"] }),
+    upsertSetting: builder.mutation({ query: ({ key, ...body }) => ({ url: "/settings/" + key, method: "PUT", body }), invalidatesTags: ["Setting","Menu","MenuList","Bill","Auth"] }),
     listInventory: builder.query({ query: (params) => ({ url: "/inventory", params }), providesTags: ["Inventory"] }),
     createInventory: builder.mutation({ query: (body) => ({ url: "/inventory", method: "POST", body }), invalidatesTags: ["Inventory"] }),
     recordStock: builder.mutation({ query: ({ id, ...body }) => ({ url: "/inventory/" + id + "/stock", method: "POST", body }), invalidatesTags: ["Inventory"] }),
@@ -143,7 +148,7 @@ export const {
   useCreateMenuMutation, useUpdateMenuMutation, useDeleteMenuMutation,
   useRegisterMealMutation, useCancelRegistrationMutation, useMyRegistrationsQuery, useSessionRegistrationsQuery,
   useGenerateQrMutation, useVerifyQrMutation, useManualCheckInMutation, useMyAttendanceQuery,
-  useRunningBillQuery, useBillingDebugQuery, useResetPaymentsMutation, useMyBillsQuery,
+  useRunningBillQuery, useListSettingsQuery, useUpsertSettingMutation, useGroundFloorInfoQuery, useGroundFloorEnrollMutation, useUpdateMyProfileMutation, useBillingDebugQuery, useResetPaymentsMutation, useMyBillsQuery,
   usePayDirectMutation, useInitiatePaymentMutation, useMyPaymentsQuery, useAllPaymentsQuery,
   useMyComplaintsQuery, useCreateComplaintMutation, useAllComplaintsQuery, useUpdateComplaintStatusMutation,
   useCreateRefundMutation, useMyRefundsQuery, useAllRefundsQuery,

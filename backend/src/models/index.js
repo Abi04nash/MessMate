@@ -1,10 +1,11 @@
-// Central model registry - importing this file registers all Mongoose models
+﻿// Central model registry - importing this file registers all Mongoose models
 export { User } from "./User.js";
 export { Hostel } from "./Hostel.js";
 export { RefreshSession } from "./RefreshSession.js";
 export { MealMenu } from "./MealMenu.js";
 export { MealSession } from "./MealSession.js";
 export { MealRegistration } from "./MealRegistration.js";
+export { SemesterEnrollment } from "./SemesterEnrollment.js";
 export { Attendance } from "./Attendance.js";
 export { Bill } from "./Bill.js";
 export { Payment } from "./Payment.js";

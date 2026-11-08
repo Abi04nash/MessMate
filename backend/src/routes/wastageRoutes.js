@@ -10,10 +10,10 @@ router.use(protect);
 router.get("/my", authorize("staff"), ctrl.mine);
 
 // Admin/warden - all records
-router.get("/stats", authorize("mess_admin", "warden"), ctrl.stats);
-router.get("/", authorize("mess_admin", "warden"), ctrl.list);
+router.get("/stats", authorize("mess_committee", "admin"), ctrl.stats);
+router.get("/", authorize("mess_committee", "admin"), ctrl.list);
 
 // Staff & admin can create
-router.post("/", authorize("staff", "mess_admin"), ctrl.create);
+router.post("/", authorize("staff", "mess_committee"), ctrl.create);
 
 export default router;

@@ -9,6 +9,6 @@ const router = Router();
 router.get("/my", protect, authorize("student"), ctrl.my);
 router.post("/", protect, authorize("student"), validate(createRegistrationSchema), ctrl.create);
 router.delete("/:id", protect, authorize("student"), ctrl.cancel);
-router.get("/session/:sessionId", protect, authorize("mess_admin", "warden", "staff"), ctrl.bySession);
+router.get("/session/:sessionId", protect, authorize("mess_committee", "admin", "staff"), ctrl.bySession);
 
 export default router;

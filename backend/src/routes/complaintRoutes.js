@@ -17,7 +17,7 @@ router.get("/:id", protect, ctrl.detail);
 router.post("/:id/messages", protect, validate(messageSchema), ctrl.addMessage);
 router.post("/:id/rate", protect, authorize("student"), validate(ratingSchema), ctrl.rate);
 
-router.get("/", protect, authorize("mess_admin", "warden"), ctrl.all);
-router.patch("/:id/status", protect, authorize("mess_admin", "warden"), validate(updateStatusSchema), ctrl.updateStatus);
+router.get("/", protect, authorize("mess_committee", "admin"), ctrl.all);
+router.patch("/:id/status", protect, authorize("mess_committee", "admin"), validate(updateStatusSchema), ctrl.updateStatus);
 
 export default router;

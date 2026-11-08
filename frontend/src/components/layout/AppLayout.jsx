@@ -7,7 +7,7 @@ import NotificationBell from "./NotificationBell.jsx";
 import {
   LayoutDashboard, Utensils, Receipt, MessageSquareWarning, CalendarOff,
   Users, Megaphone, ClipboardList, ScanLine, Trash2, BarChart3, LogOut,
-  Menu, X, ListChecks, Send, Inbox, RotateCcw, DollarSign, QrCode, Star
+  Menu, X, ListChecks, Send, Inbox, RotateCcw, DollarSign, QrCode, Star, Tag
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,7 +29,7 @@ function navFor(role) {
     { to: "/staff/request-inventory", label: "Request Items", icon: Send },
     { to: "/staff/leaves", label: "My Leaves", icon: CalendarOff }
   ];
-  if (role === "mess_admin") return [
+  if (role === "mess_committee") return [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/admin/menus", label: "Menus", icon: ListChecks },
     { to: "/admin/transactions", label: "Transactions", icon: DollarSign },
@@ -38,10 +38,12 @@ function navFor(role) {
     { to: "/admin/announcements", label: "Announcements", icon: Megaphone },
     { to: "/admin/complaints", label: "Complaints", icon: ClipboardList }
   ];
-  if (role === "warden") return [
+  // Admin only - has Pricing
+  if (role === "admin") return [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/warden/analytics", label: "Analytics", icon: BarChart3 },
     { to: "/admin/menus", label: "Menus", icon: ListChecks },
+    { to: "/admin/pricing", label: "Pricing", icon: Tag },
     { to: "/admin/transactions", label: "Transactions", icon: DollarSign },
     { to: "/admin/users", label: "Users", icon: Users },
     { to: "/inventory-requests", label: "Stock Requests", icon: Inbox },
@@ -49,6 +51,14 @@ function navFor(role) {
     { to: "/admin/complaints", label: "Complaints", icon: ClipboardList }
   ];
   return [];
+}
+
+function roleLabel(role) {
+  if (role === "mess_committee") return "Mess Secretary";
+  if (role === "admin") return "Admin";
+  if (role === "staff") return "Kitchen Staff";
+  if (role === "student") return "Student";
+  return role || "";
 }
 
 export default function AppLayout() {
@@ -90,7 +100,7 @@ export default function AppLayout() {
 
         <div className="app-role-badge">
           <span className={"role-dot role-" + user?.role} />
-          <span className="role-label">{user?.role?.replace("_", " ")}</span>
+          <span className="role-label">{roleLabel(user?.role)}</span>
         </div>
 
         <nav className="app-nav">
@@ -105,7 +115,7 @@ export default function AppLayout() {
         <div className="app-user">
           <div style={{ flex: 1, minWidth: 0 }}>
             <strong>{user?.name}</strong>
-            <span>{user?.role?.replace("_", " ")}</span>
+            <span>{roleLabel(user?.role)}</span>
           </div>
           <NotificationBell />
           <button onClick={handleLogout} aria-label="Logout" title="Logout"><LogOut size={18} /></button>

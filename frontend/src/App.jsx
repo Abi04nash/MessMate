@@ -7,6 +7,8 @@ import { useProactiveRefresh } from "./hooks/useProactiveRefresh.js";
 import LandingPage from "./pages/public/LandingPage.jsx";
 import RegisterPage from "./pages/public/RegisterPage.jsx";
 import LoginPage from "./pages/auth/LoginPage.jsx";
+import ChooseMessSystemPage from "./pages/auth/ChooseMessSystemPage.jsx";
+import GroundFloorEnrollPage from "./pages/student/GroundFloorEnrollPage.jsx";
 import AppLayout from "./components/layout/AppLayout.jsx";
 import DashboardPage from "./pages/student/DashboardPage.jsx";
 import MenuPage from "./pages/student/MenuPage.jsx";
@@ -16,6 +18,7 @@ import ComplaintsPage from "./pages/student/ComplaintsPage.jsx";
 import RefundRequestPage from "./pages/student/RefundRequestPage.jsx";
 import FeedbackPage from "./pages/student/FeedbackPage.jsx";
 import UsersPage from "./pages/admin/UsersPage.jsx";
+import PricingPage from "./pages/admin/PricingPage.jsx";
 import AnnouncementsPage from "./pages/admin/AnnouncementsPage.jsx";
 import AdminComplaintsPage from "./pages/admin/AdminComplaintsPage.jsx";
 import InventoryRequestsPage from "./pages/admin/InventoryRequestsPage.jsx";
@@ -36,7 +39,9 @@ export default function App() {
 
   useProactiveRefresh();
 
-  useEffect(() => { if (data?.data?.user) dispatch(setUser(data.data.user)); }, [data, dispatch]);
+  useEffect(() => {
+    if (data?.data?.user) dispatch(setUser(data.data.user));
+  }, [data, dispatch]);
 
   if (!hydrated) {
     return (
@@ -46,13 +51,28 @@ export default function App() {
     );
   }
 
+  // Student must pick a mess system before accessing dashboard
+  const needsSystemChoice = user && user.role === "student" && !user.messSystem;
+  const homePath = needsSystemChoice ? "/choose-system" : "/dashboard";
+
   return (
     <Routes>
-      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
-      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-      <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
+      <Route path="/" element={user ? <Navigate to={homePath} replace /> : <LandingPage />} />
+      <Route path="/login" element={user ? <Navigate to={homePath} replace /> : <LoginPage />} />
+      <Route path="/register" element={user ? <Navigate to={homePath} replace /> : <RegisterPage />} />
 
-      <Route element={user ? <AppLayout /> : <Navigate to="/login" replace />}>
+      {/* Standalone (no layout) - choose system + ground floor enrollment */}
+      <Route path="/choose-system" element={user ? <ChooseMessSystemPage /> : <Navigate to="/login" replace />} />
+      <Route path="/ground-floor/enroll" element={user ? <GroundFloorEnrollPage /> : <Navigate to="/login" replace />} />
+
+      {/* Authed app with layout - blocks students without messSystem */}
+      <Route element={
+        !user
+          ? <Navigate to="/login" replace />
+          : needsSystemChoice
+            ? <Navigate to="/choose-system" replace />
+            : <AppLayout />
+      }>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/bills" element={<BillsPage />} />
@@ -70,12 +90,13 @@ export default function App() {
         <Route path="/admin/menus/:id" element={<MenuFormPage />} />
         <Route path="/admin/transactions" element={<TransactionsPage />} />
         <Route path="/admin/users" element={<UsersPage />} />
+        <Route path="/admin/pricing" element={<PricingPage />} />
         <Route path="/admin/announcements" element={<AnnouncementsPage />} />
         <Route path="/admin/complaints" element={<AdminComplaintsPage />} />
         <Route path="/warden/analytics" element={<AnalyticsPage />} />
       </Route>
 
-      <Route path="*" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />} />
+      <Route path="*" element={user ? <Navigate to={homePath} replace /> : <Navigate to="/" replace />} />
     </Routes>
   );
 }

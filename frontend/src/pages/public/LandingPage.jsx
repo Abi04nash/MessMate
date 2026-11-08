@@ -69,7 +69,7 @@ export default function LandingPage() {
               <Link to="/login" className="landing-btn landing-btn-solid landing-btn-lg">
                 Open portal <ArrowRight size={18} />
               </Link>
-              <Link to="/register" className="landing-btn landing-btn-ghost landing-btn-lg">
+              <Link to="/register" className="landing-btn landing-btn-ghost-light landing-btn-lg">
                 Create account
               </Link>
             </div>

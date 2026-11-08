@@ -1,4 +1,4 @@
-﻿import { sendSuccess } from "../utils/apiResponse.js";
+import { sendSuccess } from "../utils/apiResponse.js";
 import * as menuService from "../services/menuService.js";
 
 export async function getTodayMenu(req, res, next) {

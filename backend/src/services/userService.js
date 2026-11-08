@@ -1,4 +1,4 @@
-import { User } from "../models/User.js";
+﻿import { User } from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
 import { parsePagination, buildMeta } from "../utils/pagination.js";
 
@@ -31,7 +31,7 @@ export async function setStatus({ userId, status, actor }) {
   if (!user) throw new ApiError(404, "User not found");
 
   // Warden accounts are protected from suspension by anyone
-  if (user.role === "warden") {
+  if (user.role === "admin") {
     throw new ApiError(403, "Warden accounts cannot be suspended");
   }
 
@@ -48,7 +48,7 @@ export async function setStatus({ userId, status, actor }) {
 export async function updateProfile({ userId, updates }) {
   const user = await User.findById(userId);
   if (!user) throw new ApiError(404, "User not found");
-  const allowed = ["name", "phone", "roomNumber", "semester", "hostel", "profileImageUrl"];
+  const allowed = ["name", "phone", "roomNumber", "semester", "hostel", "profileImageUrl", "messSystem"];
   for (const k of allowed) if (updates[k] !== undefined) user[k] = updates[k];
   await user.save();
   return user.toSafeJSON();

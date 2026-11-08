@@ -6,7 +6,7 @@ const router = Router();
 
 router.post("/", protect, authorize("staff"), ctrl.create);
 router.get("/my", protect, authorize("staff"), ctrl.mine);
-router.get("/", protect, authorize("mess_admin", "warden"), ctrl.all);
-router.patch("/:id/decide", protect, authorize("mess_admin", "warden"), ctrl.decide);
+router.get("/", protect, authorize("mess_committee", "admin"), ctrl.all);
+router.patch("/:id/decide", protect, authorize("mess_committee", "admin"), ctrl.decide);
 
 export default router;

@@ -21,7 +21,7 @@ export default function AdminComplaintsPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <h3 style={{ margin: 0 }}>{c.title}</h3>
-                  <p className="muted" style={{ margin: "4px 0" }}>{c.user?.name} - {c.category?.replace("_", " ")} - {c.priority}</p>
+                  <p className="muted" style={{ margin: "4px 0" }}>{c.user?.name} - {c.category?.replace(/_/g, " ").replace("mess committee", "mess secretary")} - {c.priority}</p>
                 </div>
                 <span className={`pill ${c.status === "resolved" ? "pill-green" : "pill-amber"}`}>{c.status}</span>
               </div>

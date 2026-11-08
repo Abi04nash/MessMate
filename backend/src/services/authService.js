@@ -10,7 +10,7 @@ import {
   hashToken, generateCsrfToken, ttlToMs
 } from "../utils/tokens.js";
 import { env } from "../config/env.js";
-import { ROLES } from "../constants/roles.js";
+import { ROLES, normalizeRole } from "../constants/roles.js";
 
 function expiryFromTtl(ttl) {
   const ms = ttlToMs(ttl);
@@ -86,7 +86,7 @@ export async function login({ email, password, ip, userAgent }) {
   const tokens = await issueTokens(user, family, { ip, userAgent });
   const csrfToken = generateCsrfToken();
 
-  return { user: user.toSafeJSON(), accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, csrfToken };
+  const u = user.toSafeJSON(); u.role = normalizeRole(u.role); return { user: u, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, csrfToken };
 }
 
 export async function refresh({ refreshToken, ip, userAgent }) {
@@ -111,7 +111,7 @@ export async function refresh({ refreshToken, ip, userAgent }) {
   await session.save();
   const tokens = await issueTokens(user, payload.family, { ip, userAgent });
   const csrfToken = generateCsrfToken();
-  return { user: user.toSafeJSON(), accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, csrfToken };
+  const u = user.toSafeJSON(); u.role = normalizeRole(u.role); return { user: u, accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, csrfToken };
 }
 
 export async function logout({ refreshToken }) {

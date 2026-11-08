@@ -36,7 +36,7 @@ export default function ComplaintsPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <label><span>Category</span>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace("_", " ")}</option>)}
+                {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ").replace("mess committee", "mess secretary")}</option>)}
               </select>
             </label>
             <label><span>Priority</span>
@@ -59,7 +59,7 @@ export default function ComplaintsPage() {
                 <h3 style={{ margin: 0 }}>{c.title}</h3>
                 <span className={`pill ${c.status === "resolved" ? "pill-green" : c.status === "rejected" ? "pill-amber" : "pill-muted"}`}>{c.status}</span>
               </div>
-              <p className="muted" style={{ margin: "6px 0" }}>{c.category?.replace("_", " ")} - {c.priority} priority</p>
+              <p className="muted" style={{ margin: "6px 0" }}>{c.category?.replace(/_/g, " ").replace("mess committee", "mess secretary")} - {c.priority} priority</p>
               <p style={{ margin: "8px 0" }}>{c.description}</p>
             </div>
           ))}

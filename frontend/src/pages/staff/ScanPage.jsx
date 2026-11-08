@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTodayMenuQuery, useSessionRegistrationsQuery, useManualCheckInMutation } from "../../app/api.js";
 import { toast } from "sonner";
-import { CheckCircle2, Users, ChevronLeft } from "lucide-react";
+import { CheckCircle2, Users, ChevronLeft, Building2 } from "lucide-react";
 
 export default function ScanPage() {
   const { data: todayData, isLoading: loadingSessions } = useTodayMenuQuery();
@@ -19,7 +19,7 @@ export default function ScanPage() {
   const handleMark = async (reg) => {
     setBusy(reg._id);
     try {
-      await markPresent({ registrationId: reg._id }).unwrap();
+      await markPresent({ registrationId: reg._id, sessionId: selectedSession._id }).unwrap();
       toast.success(reg.user?.name + " marked present");
       refetch();
     } catch (err) {
@@ -27,9 +27,12 @@ export default function ScanPage() {
     } finally { setBusy(null); }
   };
 
+  const realRegs = registrations.filter((r) => !r.isGroundFloor);
+  const gfRegs = registrations.filter((r) => r.isGroundFloor);
   const counts = {
-    registered: registrations.filter((r) => r.status === "registered").length,
-    attended: registrations.filter((r) => r.status === "attended").length
+    registered: realRegs.filter((r) => r.status === "registered").length,
+    attended: registrations.filter((r) => r.status === "attended").length,
+    gf: gfRegs.filter((r) => r.status === "enrolled_gf").length
   };
 
   if (!selectedSession) {
@@ -46,12 +49,8 @@ export default function ScanPage() {
         ) : (
           <div className="meal-grid">
             {sessions.map((s) => (
-              <button
-                key={s._id}
-                onClick={() => setSelectedSession(s)}
-                className="meal-card"
-                style={{ textAlign: "left", cursor: "pointer", border: "1px solid #e2e8e6", background: "white", padding: 18, borderRadius: 12 }}
-              >
+              <button key={s._id} onClick={() => setSelectedSession(s)} className="meal-card"
+                style={{ textAlign: "left", cursor: "pointer", border: "1px solid #e2e8e6", background: "white", padding: 18, borderRadius: 12 }}>
                 <h3 style={{ textTransform: "capitalize", margin: "0 0 4px" }}>{s.category}</h3>
                 <p className="muted" style={{ margin: "0 0 12px", fontSize: 13 }}>{s.startTime} - {s.endTime}</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "#0e7c66", fontWeight: 600 }}>
@@ -73,9 +72,8 @@ export default function ScanPage() {
         </button>
         <h1 style={{ textTransform: "capitalize" }}>{selectedSession.category} Attendance</h1>
         <p className="muted">
-          {selectedSession.startTime} - {selectedSession.endTime}
-          {" - "}
-          {counts.registered} registered, {counts.attended} attended
+          {selectedSession.startTime} - {selectedSession.endTime} - {counts.registered} registered
+          {counts.gf > 0 && <> - {counts.gf} ground floor</>} - {counts.attended} attended
         </p>
       </header>
 
@@ -91,6 +89,7 @@ export default function ScanPage() {
                 <th>Student</th>
                 <th>ID</th>
                 <th>Hostel / Room</th>
+                <th>Plan</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -102,12 +101,26 @@ export default function ScanPage() {
                   <td>{r.user?.studentId || "-"}</td>
                   <td>{r.user?.hostel?.name || "-"}{r.user?.roomNumber ? " / " + r.user.roomNumber : ""}</td>
                   <td>
-                    <span className={"pill " + (r.status === "attended" ? "pill-green" : r.status === "registered" ? "pill-amber" : "pill-muted")}>
-                      {r.status}
+                    {r.isGroundFloor ? (
+                      <span className="pill" style={{ background: "rgba(245,185,66,0.15)", color: "#a06800", fontSize: 10 }}>
+                        <Building2 size={10} style={{ display: "inline", verticalAlign: "middle" }} /> Ground Floor
+                      </span>
+                    ) : (
+                      <span className="pill pill-muted" style={{ fontSize: 10 }}>1st Floor</span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={"pill " + (
+                      r.status === "attended" ? "pill-green"
+                        : r.status === "registered" ? "pill-amber"
+                          : r.status === "enrolled_gf" ? "pill-green"
+                            : "pill-muted"
+                    )}>
+                      {r.status === "enrolled_gf" ? "Enrolled" : r.status}
                     </span>
                   </td>
                   <td>
-                    {r.status === "registered" ? (
+                    {r.status === "registered" || r.status === "enrolled_gf" ? (
                       <button className="action-btn action-approve" disabled={busy === r._id} onClick={() => handleMark(r)}>
                         <CheckCircle2 size={13} /> {busy === r._id ? "Marking..." : "Mark Present"}
                       </button>

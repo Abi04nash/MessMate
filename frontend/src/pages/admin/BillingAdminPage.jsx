@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useListUsersQuery, useRunningBillQuery } from "../../app/api.js";
 import { toast } from "sonner";
 
@@ -16,7 +16,7 @@ export default function BillingAdminPage() {
     setBusy(true);
     setResult(null);
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || "https://messmate-18cs.onrender.com/api/v1") + "/billing/generate", {
+      const res = await fetch((import.meta.env.VITE_API_URL || "/api/v1") + "/billing/generate", {
         method: "POST",
         credentials: "include",
         headers: {

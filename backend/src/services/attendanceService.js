@@ -47,8 +47,53 @@ export async function verifyQrAndCheckIn({ qrToken, staffId }) {
   }
 }
 
-// NEW: Manual check-in using registrationId (used by staff attendance sheet)
-export async function manualCheckIn({ registrationId, staffId }) {
+// Handles both 1st floor (real registrationId) and ground floor ("gf:<userId>") check-ins
+export async function manualCheckIn({ registrationId, sessionId, staffId }) {
+  // Ground floor path - registrationId is "gf:<userId>"
+  if (String(registrationId).startsWith("gf:")) {
+    const userId = String(registrationId).slice(3);
+    const session = await MealSession.findById(sessionId);
+    if (!session) throw new ApiError(404, "Session not found");
+
+    const existing = await Attendance.findOne({ user: userId, session: sessionId });
+    if (existing) throw new ApiError(409, "Already marked present");
+
+    // Find or create a billingExempt registration
+    let reg = await MealRegistration.findOne({ user: userId, session: sessionId });
+    if (!reg) {
+      try {
+        reg = await MealRegistration.create({
+          user: userId,
+          session: sessionId,
+          date: session.date,
+          status: REGISTRATION_STATUS.ATTENDED,
+          billingExempt: true
+        });
+        await MealSession.updateOne({ _id: sessionId }, { $inc: { registeredCount: 1 } });
+      } catch (e) {
+        if (e.code === 11000) {
+          reg = await MealRegistration.findOne({ user: userId, session: sessionId });
+        } else throw e;
+      }
+    } else {
+      reg.status = REGISTRATION_STATUS.ATTENDED;
+      await reg.save();
+    }
+
+    const attendance = await Attendance.create({
+      user: userId,
+      session: sessionId,
+      registration: reg._id,
+      date: session.date,
+      attendedAt: new Date(),
+      method: "manual",
+      verifiedBy: staffId
+    });
+    await MealSession.updateOne({ _id: sessionId }, { $inc: { attendedCount: 1 } });
+    return attendance;
+  }
+
+  // 1st floor path
   const reg = await MealRegistration.findById(registrationId);
   if (!reg) throw new ApiError(404, "Registration not found");
   if (reg.status !== REGISTRATION_STATUS.REGISTERED) {
