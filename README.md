@@ -13,27 +13,6 @@
 
 ---
 
-## 📖 Table of Contents
-
-1. [About the Project](#-about-the-project)
-2. [Live Demo](#-live-demo)
-3. [Core Features](#-core-features)
-4. [Dual Mess System](#-dual-mess-system)
-5. [Tech Stack](#-tech-stack)
-6. [System Architecture](#-system-architecture)
-7. [Project Structure](#-project-structure)
-8. [Role-Based Access Control](#-role-based-access-control)
-9. [API Overview](#-api-overview)
-10. [Getting Started](#-getting-started)
-11. [Environment Variables](#-environment-variables)
-12. [Database Seeding](#-database-seeding)
-13. [Deployment (Render)](#-deployment-render)
-14. [Screenshots](#-screenshots)
-15. [Roadmap](#-roadmap)
-16. [License](#-license)
-
----
-
 ## 🎯 About the Project
 
 **MESSMATE** replaces the traditional paper-and-queue mess system with a **real-time, role-aware web application**. Every meal registration, QR scan, payment, complaint, inventory movement, and feedback rating is persisted in MongoDB and authorized server-side.
