@@ -6,7 +6,7 @@ import {
 
 const features = [
   { icon: Utensils, title: "Dynamic menus", desc: "Real-time updates with dietary labels, allergens, and special meal flags across all four daily meals." },
-  { icon: QrCode, title: "QR check-in", desc: "Signed, short-lived meal passes with duplicate prevention and manual fallback for staff." },
+  { icon: QrCode, title: "Pass check-in", desc: "Signed, short-lived meal passes with duplicate prevention and manual fallback for staff." },
   { icon: Receipt, title: "Transparent billing", desc: "Itemized bills with immutable snapshots, payment history, and downloadable invoices." },
   { icon: MessageSquare, title: "Complaint tracking", desc: "Categorized grievances with priorities, image attachments, and full resolution timelines." },
   { icon: Package, title: "Inventory and wastage", desc: "Stock ledger with low-stock alerts, supplier tracking, and sustainability analytics." },
@@ -21,8 +21,8 @@ const steps = [
 
 const roles = [
   { icon: GraduationCap, name: "Students", points: ["View menus and register", "QR meal passes", "Bills and payments", "Complaints and leave"] },
-  { icon: ShieldCheck, name: "Mess Admins", points: ["Menu management", "Billing and payments", "Complaint resolution", "Inventory control"] },
-  { icon: Building2, name: "Wardens", points: ["Institutional oversight", "Policy configuration", "Financial reports", "Audit history"] },
+  { icon: ShieldCheck, name: "Mess Secretary", points: ["Menu management", "Billing and payments", "Complaint resolution", "Inventory control"] },
+  { icon: Building2, name: "Mess Admin", points: ["Institutional oversight", "Policy configuration", "Financial reports", "Audit history"] },
   { icon: UserCog, name: "Kitchen Staff", points: ["Daily meal schedule", "QR verification", "Consumption tracking", "Wastage recording"] }
 ];
 
